@@ -1,0 +1,15 @@
+{
+  "name": "lyrical-vesta",
+  "version": "0.1.0",
+  "description": "A library to stich together the Lyrical Systems Karaoke API and a Vestaboard via the Local API",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "type": "module",
+  "author": "Jason Hummel",
+  "license": "ISC",
+  "dependencies": {
+    "node-fetch": "^3.2.10"
+  }
+}
