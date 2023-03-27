@@ -1,31 +1,40 @@
 {
   "name": "lyrical-vesta",
   "version": "0.1.0",
+  "files": [
+    "dist",
+    "src"
+  ],
   "description": "A library to stich together the Lyrical Systems Karaoke API and a Vestaboard via the Local API",
-  "main": "index.js",
-  "scripts": {
-    "start": "node dist/index.js",
-    "dev": "env $(cat .env | grep -v \"#\" | xargs) npm start",
-    "test": "npm run linter && npm run tests",
-    "linter": "eslint --ext .ts src/",
-    "linter:fix": "eslint --fix --ext .ts src/",
-    "tests": "./node_modules/mocha/bin/mocha.js -r ./node_modules/ts-node/register tests/**/*.ts"
-  },
-  "type": "module",
+  "main": "dist/index.js",
+  "license": "MIT",
   "author": "Jason Hummel",
+  "scripts": {
+    "tsc": "./node_modules/typescript/bin/tsc",
+    "test": "npm run linter && nyc npm run tests",
+    "linter": "eslint --ext .ts src/",
+    "tests": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' node ./node_modules/mocha/bin/mocha -r ./node_modules/ts-node/register/index.js 'tests/**/*.ts'",
+    "test:file": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' node ./node_modules/mocha/bin/mocha -r ./node_modules/ts-node/register/index.js \"tests/**/$FILENAME.ts\"",
+    "test-publish": "npm publish --dry-run",
+    "prod-publish": "npm run tsc && npm publish",
+    "prepublishOnly": "npm run test",
+    "preversion": "npm run test"
+  },
   "engines": {
     "node": ">=18.0.0"
   },
-  "license": "ISC",
   "devDependencies": {
-    "@types/mocha": "^10.0.0",
-    "@typescript-eslint/eslint-plugin": "^5.42.0",
-    "@typescript-eslint/parser": "^5.42.0",
-    "chai": "^4.3.6",
-    "eslint": "^8.26.0",
+    "@types/chai": "^4.3.4",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "^18.15.10",
+    "@typescript-eslint/eslint-plugin": "^5.57.0",
+    "@typescript-eslint/parser": "^5.57.0",
+    "chai": "^4.3.7",
+    "eslint": "^8.36.0",
     "eslint-config-airbnb-base": "^15.0.0",
-    "mocha": "^10.1.0",
+    "mocha": "^10.2.0",
+    "nyc": "^15.1.0",
     "ts-node": "^10.9.1",
-    "typescript": "^4.8.4"
+    "typescript": "^5.0.2"
   }
 }
