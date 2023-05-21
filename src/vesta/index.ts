@@ -1,57 +1,55 @@
 import { getChar } from '../utils/characters';
+
 export const COLUMNS = 22;
-
-function findAllSpaceIndexes(message: number[]): number[] {
-  const indexes = []
-  const SPACE_CHAR = getChar(' ');
-  for(let i = 0; i < message.length; i++)
-    if (message[i] === SPACE_CHAR) indexes.push(i);
-
-  return indexes;
-}
+export const ROWS = 6;
 
 export function getVestaFormattedChars(message: string): number[] {
   if (!message.length) throw new Error('Empty string cannot be formatted as a Vestaboard word');
   return message.split('').map((c) => getChar(c));
 }
 
-export function getVestaFormattedLines(message: string): number[][] {
-  const lines: number[][] = [];
-  const vestaMessage = getVestaFormattedChars(message);
-  const spaceIndexes = findAllSpaceIndexes(vestaMessage);
+type RecursiveArray = Array<RecursiveArray | number>;
+function findNestedLength(arr: RecursiveArray): number {
+  return arr.flat(3).length;
+}
 
-  let lineNum = 1;
-  let start = 0;
+export function chunkWordsToLines(wordArr: number[][]): number[][][] {
+  const lines: number[][][] = [[]];
+  /* [
+      [
+        [1,2,3],
+        [1,2,3]
+      ],[
+        [1,2 3]
+      ]
+    ] */
 
-  spaceIndexes.forEach((spaceIndex, index) => {
-    if (spaceIndex * lineNum > COLUMNS) {
-      const line = vestaMessage.slice(start, spaceIndexes[index - 1])
+  return wordArr.reduce((acc, word) => {
+    const last = acc[acc.length - 1];
+    const l = findNestedLength(last);
 
-      lineNum++
-      start = index;
-
-      lines.push(line);
+    if (l + word.length + (last.length) > COLUMNS) {
+      acc.push([word]);
+    } else {
+      last.push(word);
     }
-  })
 
-  return lines;
-}
-/*
-function getVestaFormatedLines(words) {
-  const lines = words.reduce((acc, word, idx, arr) => {
-    const vestaWord = getVestaFormattedWord(word).concat([0]);
-    console.log(vestaWord);
     return acc;
-        const row = acc.length;
-
-        if(acc[row-1].length + chars.length > COLUMNS) {
-        const remainder = COLUMNS - acc[row - 1].length;
-        acc[row - 1] = acc[row - 1].concat(Array(remainder).fill(0))
-        acc[row] = chars;
-      } else {
-        acc[row-1] = acc[row-1].concat(chars)
-      }
-      return acc;
-  }, [[]]);
+  }, lines);
 }
-*/
+
+function combineWordsToLines(lines: number[][][]): number[][] {
+  return lines.map((line) => line.reduce((acc, word) => {
+    const w = (acc.length === 0) ? word : [0, ...word];
+    return acc.concat(w);
+  }, []));
+}
+
+export function getVestaFormattedLines(message: string): number[][] {
+  if (message.length > COLUMNS * ROWS) throw new Error('String is too long for display');
+
+  const words = message.split(' ');
+  const wordArr = words.map((word) => getVestaFormattedChars(word));
+  const m = chunkWordsToLines(wordArr);
+  return combineWordsToLines(m);
+}
