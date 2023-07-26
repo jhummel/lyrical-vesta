@@ -1,9 +1,15 @@
 import { expect} from "chai";
+import { MockAgent, setGlobalDispatcher, Interceptable } from 'undici'
+
 import {
   COLUMNS,
   ROWS,
   getVestaFormattedChars,
-  getVestaFormattedLines
+  getVestaFormattedWords,
+  chunkWordsToLines,
+  getVestaFormattedLines,
+  VESTA_URL,
+  Vestaboard
 } from "../src/vesta" 
 
 // https://docs.vestaboard.com/characters
@@ -26,15 +32,46 @@ describe("Vesta Tests", () => {
     expect(getVestaFormattedChars.bind(null, '')).to.throw('Empty string cannot be formatted as a Vestaboard word')
   });
 
-  it("should keep short messages on a single line", () => {
-    expect(getVestaFormattedLines("Hello World")).to.eql([hello_world])
+  it("should split an array of words into multiple arrays", () => {
+    expect(getVestaFormattedWords(['HELLO', 'WORLD']).length).to.equal(2)
   });
 
   it("should split long messages into multiple lines", () => {
-    expect(getVestaFormattedLines(random).length).to.equal(2)
+    const words = getVestaFormattedWords(random.split(' '));
+    expect(chunkWordsToLines(words).length).to.equal(2)
   });
 
   it("should not allow messages that are too long", () => {
     expect(getVestaFormattedLines.bind(null, randomLong)).to.throw('String is too long for display')
+  });
+
+  describe("with the vestaboard read write api", () => {
+    let mockPool: Interceptable;
+
+    before(() => {
+      const mockAgent = new MockAgent();
+      mockAgent.disableNetConnect();
+      mockPool = mockAgent.get(VESTA_URL);
+      setGlobalDispatcher(mockAgent);
+    });
+
+    it('should send a message to the vestaboard API', async () => {
+      const key = 'abcdef';
+
+      mockPool.intercept({
+        path: '/',
+        method: 'POST',
+        headers: {
+          'X-Vestaboard-Read-Write-Key': key,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify([hello_world])
+      }).reply(200, {"status": "ok"});
+
+
+      const vesta = new Vestaboard(key);
+      const response = await vesta.sendMessage('hello world');
+      expect(response).to.eql({"status": "ok"});
+    })
   })
 });

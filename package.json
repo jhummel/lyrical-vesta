@@ -10,10 +10,11 @@
   "license": "MIT",
   "author": "Jason Hummel",
   "scripts": {
-    "tsc": "./node_modules/typescript/bin/tsc",
-    "test": "npm run linter && nyc npm run tests",
+    "dev": "ts-node src/index.ts",
+    "build": "./node_modules/typescript/bin/tsc",
+    "test": "npm run linter:fix && nyc npm run tests",
     "linter": "eslint --ext .ts src/",
-    "linter-fix": "eslint --fix --ext .ts src/",
+    "linter:fix": "eslint --fix --ext .ts src/",
     "tests": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' node ./node_modules/mocha/bin/mocha -r ./node_modules/ts-node/register/index.js 'tests/**/*.ts'",
     "test:file": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' node ./node_modules/mocha/bin/mocha -r ./node_modules/ts-node/register/index.js \"tests/**/$FILENAME.ts\"",
     "test-publish": "npm publish --dry-run",
@@ -28,6 +29,8 @@
     "@types/chai": "^4.3.4",
     "@types/mocha": "^10.0.1",
     "@types/node": "^18.15.10",
+    "@types/node-cron": "^3.0.7",
+    "@types/sinon": "^10.0.15",
     "@typescript-eslint/eslint-plugin": "^5.57.0",
     "@typescript-eslint/parser": "^5.57.0",
     "chai": "^4.3.7",
@@ -35,7 +38,15 @@
     "eslint-config-airbnb-base": "^15.0.0",
     "mocha": "^10.2.0",
     "nyc": "^15.1.0",
+    "sinon": "^15.1.0",
     "ts-node": "^10.9.1",
-    "typescript": "^5.0.2"
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.0.2",
+    "undici": "^5.22.1"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "node-cron": "^3.0.2",
+    "pino": "^8.14.1"
   }
 }

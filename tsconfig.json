@@ -12,7 +12,7 @@
     "declaration": true,
     "declarationDir": "dist/types",
     "target": "ESNext",
-    "module": "CommonJS",
+    "module": "NodeNext",
     "strict": true,
     "skipLibCheck": true,
     "alwaysStrict": true,
@@ -26,6 +26,7 @@
     "noFallthroughCasesInSwitch": true,
     "sourceMap": true,
     "stripInternal": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "resolveJsonModule": true
   }
 }
