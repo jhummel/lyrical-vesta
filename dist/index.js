@@ -22,23 +22,32 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-// import cron from 'node-cron';
+const cron = __importStar(require("node-cron"));
 const dotenv = __importStar(require("dotenv"));
-const lyrical_1 = require("./lyrical");
+const logger_1 = require("./logger");
 const vesta_1 = require("./vesta");
+const lyrical_1 = require("./lyrical");
+const prefix_json_1 = __importDefault(require("./prefix.json"));
 const result = dotenv.config();
 if (result.error) {
     throw result.error;
 }
-console.log(process.env);
-const { VESTA_API_KEY = '' } = process.env;
-const vesta = new vesta_1.Vestaboard(VESTA_API_KEY);
-lyrical_1.LyricalSystems.getCurrentSongForRandomPlayer()
-    .then(async (player) => {
-    if (player) {
-        const response = await vesta.sendMessage(`Room ${player.room}: ${player.song.title} by ${player.song.artist}`);
-        console.log(response);
-    }
+const { VESTA_API_KEY = '', VESTA_CHANGE_DURATION_IN_MINUTES = 10 } = process.env;
+logger_1.logger.info(`Vesta change duration is set to: ${VESTA_CHANGE_DURATION_IN_MINUTES}`);
+cron.schedule(`*/${VESTA_CHANGE_DURATION_IN_MINUTES} * * * *`, () => {
+    const vesta = new vesta_1.Vestaboard(VESTA_API_KEY);
+    const rand = Math.floor(Math.random() * prefix_json_1.default.length);
+    lyrical_1.LyricalSystems.getCurrentSongForRandomPlayer()
+        .then(async (player) => {
+        if (player) {
+            vesta.sendMessage(`${prefix_json_1.default[rand]} Room ${player.room}: ${player.song.title} by ${player.song.artist}!`)
+                .then((res) => logger_1.logger.info(res))
+                .catch((err) => logger_1.logger.error(err));
+        }
+    });
 });
 //# sourceMappingURL=index.js.map

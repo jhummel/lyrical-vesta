@@ -11,7 +11,7 @@
   "author": "Jason Hummel",
   "scripts": {
     "dev": "ts-node src/index.ts",
-    "build": "./node_modules/typescript/bin/tsc",
+    "build": "./node_modules/typescript/bin/tsc && cp .env dist/.env",
     "test": "npm run linter:fix && nyc npm run tests",
     "linter": "eslint --ext .ts src/",
     "linter:fix": "eslint --fix --ext .ts src/",

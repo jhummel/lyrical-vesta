@@ -1,7 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Vestaboard = exports.getVestaFormattedLines = exports.chunkWordsToLines = exports.getVestaFormattedChars = exports.ROWS = exports.COLUMNS = exports.VESTA_URL = void 0;
+exports.Vestaboard = exports.getVestaFormattedLines = exports.addFullVestaLines = exports.combineWordsToLines = exports.chunkWordsToLines = exports.padLines = exports.getVestaFormattedWords = exports.getVestaFormattedChars = exports.ROWS = exports.COLUMNS = exports.VESTA_URL = void 0;
 const characters_1 = require("../utils/characters");
+const logger_1 = require("../logger");
+// export const VESTA_URL = 'http://192.168.1.215:7000/local-api/message';
 exports.VESTA_URL = 'https://rw.vestaboard.com';
 exports.COLUMNS = 22;
 exports.ROWS = 6;
@@ -14,8 +16,22 @@ exports.getVestaFormattedChars = getVestaFormattedChars;
 function findNestedLength(arr) {
     return arr.flat(3).length;
 }
+function getVestaFormattedWords(words) {
+    return words.map((word) => getVestaFormattedChars(word));
+}
+exports.getVestaFormattedWords = getVestaFormattedWords;
+function padLines(lines) {
+    return lines.map((line) => {
+        const { length } = line;
+        if (length < exports.COLUMNS) {
+            return line.concat(new Array(exports.COLUMNS - length).fill(0));
+        }
+        return [...line];
+    });
+}
+exports.padLines = padLines;
 function chunkWordsToLines(wordArr) {
-    const lines = [[]];
+    const accumulator = [[]];
     /* [
         [
           [1,2,3],
@@ -34,7 +50,7 @@ function chunkWordsToLines(wordArr) {
             last.push(word);
         }
         return acc;
-    }, lines);
+    }, accumulator);
 }
 exports.chunkWordsToLines = chunkWordsToLines;
 function combineWordsToLines(lines) {
@@ -43,13 +59,30 @@ function combineWordsToLines(lines) {
         return acc.concat(w);
     }, []));
 }
+exports.combineWordsToLines = combineWordsToLines;
+function addFullVestaLines(lines) {
+    if (lines.length > exports.ROWS)
+        throw new Error('Too many lines for display');
+    let i = lines.length;
+    while (i < exports.ROWS) {
+        const empty = new Array(exports.COLUMNS).fill(0);
+        if (i % 2 === 0)
+            lines.unshift(empty);
+        else
+            lines.push(empty);
+        i += 1;
+    }
+    return lines;
+}
+exports.addFullVestaLines = addFullVestaLines;
 function getVestaFormattedLines(message) {
     if (message.length > exports.COLUMNS * exports.ROWS)
         throw new Error('String is too long for display');
     const words = message.split(' ');
-    const wordArr = words.map((word) => getVestaFormattedChars(word));
+    const wordArr = getVestaFormattedWords(words);
     const m = chunkWordsToLines(wordArr);
-    return combineWordsToLines(m);
+    const l = combineWordsToLines(m);
+    return padLines(l);
 }
 exports.getVestaFormattedLines = getVestaFormattedLines;
 class Vestaboard {
@@ -58,16 +91,22 @@ class Vestaboard {
         this.key = key;
     }
     async sendMessage(message) {
-        const vestaMessage = getVestaFormattedLines(message);
-        console.log('key: ', this.key);
+        logger_1.logger.debug('New message received to vesta board: ', message);
+        const condencedVestaMessage = getVestaFormattedLines(message);
+        const vestaMessage = addFullVestaLines(condencedVestaMessage);
         return fetch(exports.VESTA_URL, {
             body: JSON.stringify(vestaMessage),
             headers: {
-                'Content-Type': 'application/json',
                 'X-Vestaboard-Read-Write-Key': this.key,
+                'Content-Type': 'application/json',
             },
             method: 'POST',
-        }).then((res) => res.json());
+        }).then(async (res) => {
+            if (res.ok) {
+                return res.json();
+            }
+            throw await res.json();
+        });
     }
 }
 exports.Vestaboard = Vestaboard;
